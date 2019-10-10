@@ -117,6 +117,7 @@ venv.bak/
 */summary_archive/
 
 # Weights & Biases files
+*wandb
 */wandb/
 
 # Jupyter notebooks
