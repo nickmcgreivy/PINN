@@ -39,6 +39,6 @@ Here the solution f is being represented by a neural network whose inputs are x,
 
 ![equation](https://latex.codecogs.com/png.latex?\dpi{200}&space;\frac{\partial&space;n}{\partial&space;t}&space;&plus;&space;\frac{\partial}{\partial&space;x}(nu)=0)
 
-![equation](\frac{\partial u}{\partial t} + u \frac{\partial u}{\partial x} = -e E)
+![equation](https://latex.codecogs.com/png.latex?\dpi{200}&space;\frac{\partial&space;u}{\partial&space;t}&space;&plus;&space;u&space;\frac{\partial&space;u}{\partial&space;x}&space;=&space;-e&space;E)
 
-![equation](\epsilon_0 e(1 - n) = \frac{\partial E}{\partial x})
+![equation](https://latex.codecogs.com/png.latex?\dpi{200}&space;e(1&space;-&space;n)&space;=\epsilon_0&space;\frac{\partial&space;E}{\partial&space;x})
