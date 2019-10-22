@@ -9,16 +9,29 @@ from pyDOE import lhs
 
 import time
 
-# Weights and biases
+# Weights and biases for experiment tracking
 import wandb
 wandb.init(project='pinn', entity="nick-and-phil")
 
-np.random.seed(42)
-tf.set_random_seed(42)
+# You need to set the seed before any call to a random number generator in numpy, so this doesn't
+#   do too much. TensorFlow uses the same seed for every call though.
+seed = 42
+np.random.seed(seed)
+tf.set_random_seed(seed)
 
 
+# Class that governs everything to do with initializing and training the NN
 class vlasovFreeStreamNN:
 
+    # lb: lower bound of the t, x, and v domain bounds
+    # up: upper bound of the t, x, and v domain bounds
+    # layers: list of number of neurons for each layer
+    # X_inner: interior points of the function to evaluate accuracy at
+    # X_i: stack of coordinates to use for initial conditions
+    # u_i: values of the initial conditions
+    # X_b: boundary condition coordinates for the [b]ottom X coordinate
+    # X_t: boundary condition coordinates for the [t]op X coordinate
+    # Generator: function that samples inner points, initial conditions, and boundary conditions
     def __init__(self, lb, ub, layers, X_inner, X_i, u_i, X_b, X_t, generator):
 
         # Lower bounds of t, x, v
@@ -46,20 +59,20 @@ class vlasovFreeStreamNN:
             self.X_inner = X_inner
 
             # initial conditions
-            # self.u_i_t = X_i[:, 0]
-            # self.u_i_x = X_i[:, 1]
-            # self.u_i_v = X_i[:, 2]
+            # self.u_i_t = X_i[:, 0]  # unused
+            # self.u_i_x = X_i[:, 1]  # unused
+            # self.u_i_v = X_i[:, 2]  # unused
             self.u_i = u_i
             self.X_i = X_i
 
-            # self.u_t_t = X_t[:, 0]
-            # self.u_t_x = X_t[:, 1]
-            # self.u_t_v = X_t[:, 2]
+            # self.u_t_t = X_t[:, 0]  # unused
+            # self.u_t_x = X_t[:, 1]  # unused
+            # self.u_t_v = X_t[:, 2]  # unused
             self.X_t = X_t
 
-            # self.u_b_t = X_b[:, 0]
-            # self.u_b_x = X_b[:, 1]
-            # self.u_b_v = X_b[:, 2]
+            # self.u_b_t = X_b[:, 0]  # unused
+            # self.u_b_x = X_b[:, 1]  # unused
+            # self.u_b_v = X_b[:, 2]  # unused
             self.X_b = X_b
 
         # Start a session
@@ -68,7 +81,8 @@ class vlasovFreeStreamNN:
         #   on a single GPU
         tfconfig.gpu_options.allow_growth = True
         tfconfig.allow_soft_placement = True
-        # tf.config.log_device_placement = True
+        # Set the following to True to log which device the TF ops are placed on
+        tf.config.log_device_placement = False
         self.sess = tf.Session(config=tfconfig)
 
         with tf.name_scope("Placeholders"):
@@ -96,11 +110,11 @@ class vlasovFreeStreamNN:
         self.u_pred = self.net_u(self.u_i__t, self.u_i__x, self.u_i__v)
         self.u_init_pred = self.net_u(self.u_i__t, self.u_i__x, self.u_i__v)
 
-        # x minimum boundary conditions
+        # x minimum (bottom) boundary conditions
         self.u_b_pred = self.net_u(self.u_b__t, self.u_b__x, self.u_b__v)
-        # x maximum boundary conditions
+        # x maximum (top) boundary conditions
         self.u_t_pred = self.net_u(self.u_t__t, self.u_t__x, self.u_t__v)
-        # Derivatives of u for boundary conditions (b and t) and initial conditions (I think)
+        # Derivatives of u for boundary conditions (b and t) and initial conditions
         self.u_db_pred = self.net_u_d(self.u_b__t, self.u_b__x, self.u_b__v)
         self.u_dt_pred = self.net_u_d(self.u_t__t, self.u_t__x, self.u_t__v)
         self.u_d_pred = self.net_u_d(self.u_i__t, self.u_i__x, self.u_i__v)
@@ -109,7 +123,8 @@ class vlasovFreeStreamNN:
         self.fLoss = tf.reduce_mean(tf.square(self.f_pred))
         # Match initial conditions predicted by the network with real ones
         self.iLoss = tf.reduce_mean(tf.square(self.u_init_pred - self.u__i))
-        # Match value and derivatives at the boundaries
+        # Match value and derivatives at the boundaries. u_t should equal u_b because we are using
+        #   periodic boundary conditions (and thus the slopes must match as well)
         self.bLoss = (0.5 * tf.reduce_mean(tf.square(self.u_t_pred - self.u_b_pred)) +
                       0.5 * tf.reduce_mean(tf.square(self.u_dt_pred - self.u_db_pred)))
         # Total loss
@@ -128,6 +143,7 @@ class vlasovFreeStreamNN:
         init = tf.global_variables_initializer()
         self.sess.run(init)
 
+    # Initialize the neural network from the layer list. Should be fairly straightforward
     def initialize_NN(self, layers):
         weights = []
         biases = []
@@ -139,12 +155,14 @@ class vlasovFreeStreamNN:
             biases.append(b)
         return weights, biases
 
+    # A good initialization scheme to use for assymetric nonlinearities (e.g., ReLU)
     def kaiming_init(self, size):
         in_dim = size[0]
         out_dim = size[1]
         kaiming_stddev = np.sqrt(2 / (in_dim))
         return tf.Variable(tf.truncated_normal([in_dim, out_dim], stddev=kaiming_stddev), dtype=tf.float32)
 
+    # A good initialization scheme to use for symmetric saturating nonlinearities (e.g., tanh)
     def xavier_init(self, size):
         in_dim = size[0]
         out_dim = size[1]
@@ -194,10 +212,11 @@ class vlasovFreeStreamNN:
             wandb.log({'loss': loss, 'fLoss': fLoss, 'i:oss:': iLoss, 'bLoss': bLoss},
                       step=self.iters)
 
-        #    u_pred, _, _ = self.predict(self.X_print)
-        #    plt.imshow(np.reshape(u_pred,(100,100)))
+        #    u_pred, _, _ = self.predict(self.X_print)  # unused
+        #    plt.imshow(np.reshape(u_pred,(100,100)))  # unused
 
-    # Train the NN. numSteps controls the number of iterations through 
+    # Train the NN. numSteps controls the number of times to run the L-BFGS-B optimizer (which has
+    #   its own number of iterations determined by desired error)
     def train(self, numSteps, N_inner, N_i, N_b):
         for i in range(numSteps):
             for X_inner, X_i, u_i, X_b, X_t in self.generator(self.X_inner, self.X_i, self.u_i,
@@ -224,19 +243,26 @@ class vlasovFreeStreamNN:
                                         loss_callback=self.callback)
             print(i)
 
+    # Save the model
     def save(self):
         tf.train.Saver().save(self.sess, "model.ckpt")
 
+    # Calculate the value of u, the gradient of u, and f from the neural network
     def predict(self, X_star):
+        # Predicted values of u for a set of times, positions, and velocities
         u_p = self.sess.run(
             self.u_pred, {self.u_i__t: X_star[:, 0], self.u_i__x: X_star[:, 1], self.u_i__v: X_star[:, 2]})
+        # Predicted values of the gradient of u for a set of times, positions, and velocities
         d_p = self.sess.run(
             self.u_d_pred, {self.u_i__t: X_star[:, 0], self.u_i__x: X_star[:, 1], self.u_i__v: X_star[:, 2]})
+        # Predicted values of f for a set of times, positions. This will be close to 0 if the
+        #   solution is a good one
         f_p = self.sess.run(
             self.f_pred, {self.f__t: X_star[:, 0], self.f__x: X_star[:, 1], self.f__v: X_star[:, 2]})
         return u_p, d_p, f_p
 
 
+# The values of the initial conditions depending on the position and velocity
 def initialConditions(X, V, alpha):
     return np.exp(-(V ** 2)) * (1 + alpha * np.sin(2 * X))
 
@@ -269,12 +295,12 @@ v_max = 3
 # alpha controls the scale of the sin feature in position
 alpha = 0.25
 
-# Number of points to inspect / train on? 
+# Number of points to inspect / train on
 N_f = 1000000
-# Number of initial conditions? 
+# Number of initial conditions
 N_init = 300
-# Number of different values of time, position, and velociy. Number of predicted points? 
-N_pred = 300  # must be larger than N_u (what is N_u?) 
+# Number of different values of time, position, and velociy. Number of predicted points
+N_pred = 300  # must be larger than N_u (what is N_u?)
 # The number of neurons in each layer of the network
 layers = [3, 20, 20, 20, 20, 20, 20, 20, 1]
 
@@ -285,7 +311,7 @@ v = np.linspace(-v_max, v_max, N_pred)
 
 # Create grid of all combinations of T, X, and V values (3D)
 T, X, V = np.meshgrid(t, x, v)
-# What is X_star 
+# What is X_star???
 # Has shape (N_pred ** 3, 3)
 X_star = np.hstack((T.flatten()[:, None], X.flatten()[:, None], V.flatten()[:, None]))
 
@@ -293,7 +319,8 @@ X_star = np.hstack((T.flatten()[:, None], X.flatten()[:, None], V.flatten()[:, N
 lb = X_star.min(0)
 ub = X_star.max(0)
 
-# Boundary conditions at x = -x_max (that's why the first index is 0?)
+# Boundary conditions at x = -x_max. Meshgrid uses cartesian ordering (instead of matrix). sp the
+#   zero in the first coordinate position is actually for x, not t
 xx2 = np.stack((T[0, :, :], X[0, :, :], V[0, :, :]), axis=2)
 # xx2 has shape (N_pred, N_pred, 3). Reshape:
 xx2 = np.reshape(xx2, (N_pred ** 2, 3))
@@ -327,9 +354,10 @@ X_f_train = lb + (ub - lb) * lhs(3, N_f)
 # Stack N_f random time-position-velocity pairs with initial and boundary conditions
 X_f_train = np.vstack((X_f_train, X_u_train))
 
-# Build the neural network
+# Build the neural network. See the class definition for parameter meanings
 model = vlasovFreeStreamNN(lb, ub, layers, X_f_train, xx1, uu1, xx2, xx3, generator)
 
+# Train the neural network on the GPU
 with tf.device('/device:GPU:0'):
     start_time = time.time()
     # Number of steps, number of interior evaluation points, number of initial conditions,
