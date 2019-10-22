@@ -15,7 +15,7 @@ Code requires:
 * ... and other common libraries
 
 ### Code examples
-`vlasovFreeStream.py`: solving the free-streaming Vlasov equation, $\frac{\partial f}{\partial t} + v \frac{\partial f}{\partial x}$, using physics informed neural networks. __This is the most commented / documented code file.__ This model converges to a solution nicely.
+`vlasovFreeStream.py`: solving the free-streaming Vlasov equation, ![equation](https://latex.codecogs.com/png.latex?\dpi{200}&space;\frac{\partial&space;f}{\partial&space;t}&space;&plus;&space;v&space;\frac{\partial&space;f}{\partial&space;x}), using physics informed neural networks. __This is the most commented / documented code file.__ This model converges to a solution nicely.
 
 `boundaryLayer.py`: solving a boundary layer problem, $$\epsilon \frac{\partial^2 u}{\partial x^2 } + (1+x)\frac{\partial u}{\partial x} + u=0 $$, for small epsilon. In this case, it is solved for $$\epsilon = 0.01$$ and $$0.005$$. This NN also converges.
 
