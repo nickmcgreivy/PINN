@@ -17,7 +17,7 @@ Code requires:
 ### Code examples
 `vlasovFreeStream.py`: solving the free-streaming Vlasov equation
 
-![equation](https://latex.codecogs.com/png.latex?\dpi{200}&space;\normal&space;\frac{\partial&space;f}{\partial&space;t}&space;&plus;&space;v&space;\frac{\partial&space;f}{\partial&space;x})
+![equation](https://latex.codecogs.com/png.latex?\dpi{200}&space;\normal&space;\frac{\partial&space;f}{\partial&space;t}&space;&plus;&space;v&space;\frac{\partial&space;f}{\partial&space;x}=0)
 
 using physics informed neural networks. __This is the most commented / documented code file.__ This model converges to a solution nicely.
 
