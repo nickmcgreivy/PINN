@@ -15,12 +15,30 @@ Code requires:
 * ... and other common libraries
 
 ### Code examples
-`vlasovFreeStream.py`: solving the free-streaming Vlasov equation, ![equation](https://latex.codecogs.com/png.latex?\dpi{100}&space;\tiny&space;\frac{\partial&space;f}{\partial&space;t}&space;&plus;&space;v&space;\frac{\partial&space;f}{\partial&space;x}), using physics informed neural networks. __This is the most commented / documented code file.__ This model converges to a solution nicely.
+`vlasovFreeStream.py`: solving the free-streaming Vlasov equation
 
-`boundaryLayer.py`: solving a boundary layer problem, $$\epsilon \frac{\partial^2 u}{\partial x^2 } + (1+x)\frac{\partial u}{\partial x} + u=0 $$, for small epsilon. In this case, it is solved for $$\epsilon = 0.01$$ and $$0.005$$. This NN also converges.
+![equation](https://latex.codecogs.com/png.latex?\dpi{200}&space;\normal&space;\frac{\partial&space;f}{\partial&space;t}&space;&plus;&space;v&space;\frac{\partial&space;f}{\partial&space;x})
 
-`vlasovEfield.py`: Attempting to solve the Vlasov equation, $$\frac{\partial f}{\partial t} + v \frac{\partial f}{\partial x} + \frac{q}{m} E \frac{\partial f}{\partial v}$$, now with an electric field term whose solution is given by Gauss's law. The solution did not converge within a reasonable amount of time and model capacity. 
+using physics informed neural networks. __This is the most commented / documented code file.__ This model converges to a solution nicely.
 
-Here the solution $$f$$ is being represented by a neural network whose inputs are $$x$$, $$v$$, and $$t$$. The electric field is represented by a different neural network whose inputs are $$x$$ and $$t$$. 
+`boundaryLayer.py`: solving a boundary layer problem
 
-`fluidOscillations.py:`: Here we solve a set of cold-plasma fluid equations, which are continuity and momentum equations with an electric field term. These equations are $$\frac{\partial n}{\partial t} + \frac{\partial}{\partial x}(nu)=0$$, $$\frac{\partial u}{\partial t} + u \frac{\partial u}{\partial x} = -e E$$, and $$e(1 - n) = \frac{\partial E}{\partial x}$$. 
+![equation](https://latex.codecogs.com/png.latex?\dpi{200}&space;\epsilon&space;\frac{\partial^2&space;u}{\partial&space;x^2&space;}&space;&plus;&space;(1&plus;x)\frac{\partial&space;u}{\partial&space;x}&space;&plus;&space;u=0)
+
+for small epsilon. In this case, it is solved for $$\epsilon = 0.01$$ and $$0.005$$. This NN also converges.
+
+`vlasovEfield.py`: Attempting to solve the Vlasov equation
+
+![equation](https://latex.codecogs.com/png.latex?\dpi{200}&space;\frac{\partial&space;f}{\partial&space;t}&space;&plus;&space;v&space;\frac{\partial&space;f}{\partial&space;x}&space;&plus;&space;\frac{q}{m}&space;E&space;\frac{\partial&space;f}{\partial&space;v}=0)
+
+now with an electric field term whose solution is given by Gauss's law. The solution did not converge within a reasonable amount of time and model capacity. 
+
+Here the solution f is being represented by a neural network whose inputs are x, v, and t. The electric field is represented by a different neural network whose inputs are x and t. 
+
+`fluidOscillations.py:`: Here we solve a set of cold-plasma fluid equations, which are continuity and momentum equations with an electric field term. These equations are 
+
+![equation](https://latex.codecogs.com/png.latex?\dpi{200}&space;\frac{\partial&space;n}{\partial&space;t}&space;&plus;&space;\frac{\partial}{\partial&space;x}(nu)=0)
+
+![equation](\frac{\partial u}{\partial t} + u \frac{\partial u}{\partial x} = -e E)
+
+![equation](\epsilon_0 e(1 - n) = \frac{\partial E}{\partial x})
