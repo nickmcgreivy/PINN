@@ -1,6 +1,6 @@
 # Physics-informed neural networks (PINNs)
 
-Nick McGreivy and Phil Travis are working on solving some problems in Plasma Physics with Physics-Informed Neural Networks (PINNs). This work is no longer in progress, but is being presented at APS-DPP 2019.
+Nick McGreivy and Phil Travis are working on solving some problems in Plasma Physics with Physics-Informed Neural Networks (PINNs). This work is no longer in progress, but was presented at APS-DPP 2019.
 
 ### Resources
 This project is an application of Maziar Rassi's "physics informed neural networks" to plasma physics problems. The original paper by Rassi can be found on [arXiv:1711.10561](https://arxiv.org/abs/1711.10561). Rassi also has a blog post explaining the concept [here](http://www.dam.brown.edu/people/mraissi/research/1_physics_informed_neural_networks/).
